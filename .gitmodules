@@ -1,6 +1,0 @@
-[submodule "reference/openDAW"]
-	path = reference/openDAW
-	url = https://github.com/andremichelle/openDAW.git
-[submodule "reference/daw"]
-	path = reference/daw
-	url = https://github.com/gridsound/daw.git
