@@ -1,34 +1,48 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <div className="app-root">
+      <header className="app-header">
+        <h1>Web DAW Toolkit</h1>
+        <p>Browser-based audio playground built on GH Pages.</p>
+      </header>
+
+      <main className="app-main">
+        <section className="app-card">
+          <h2>Phase 1: Playground Shell</h2>
+          <p>
+            This is the base React + Vite shell we&apos;ll use to assemble a
+            modern Web Audio workstation. No server, fully static.
+          </p>
+          <ul>
+            <li>React + Vite (GH Pages friendly)</li>
+            <li>Web Audio API under the hood</li>
+            <li>Reference engines from upstream DAWs</li>
+          </ul>
+        </section>
+
+        <section className="app-card">
+          <h2>Upstream Engines (read-only)</h2>
+          <p>
+            We keep reference implementations in <code>/upstreams</code>:
+          </p>
+          <ul>
+            <li><code>opendaw</code> – modular Web Audio engine</li>
+            <li><code>daw</code> – GridSound timeline &amp; UI</li>
+            <li><code>webdaw-gh</code> – simple browser DAW concepts</li>
+          </ul>
+          <p>
+            We&apos;ll pull concepts from these, not copy their UI verbatim.
+          </p>
+        </section>
+
+        <section className="app-card">
+          <h2>Status</h2>
+          <p>Core scaffold is live. Next up: audio engine bootstrap.</p>
+        </section>
+      </main>
+    </div>
   )
 }
 
