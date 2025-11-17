@@ -1,80 +1,92 @@
 // /workspaces/toolkit/app/src/App.tsx
 
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as Tone from "tone";
-
 import { TransportBar } from "./components/transport/TransportBar";
-// Later:
-// import { TrackLane } from "./components/tracks/TrackLane";
-// import { TrackHeader } from "./components/tracks/TrackHeader";
-// import { MasterMeter } from "./components/mixer/MasterMeter";
+import { Panel } from "./components/shared/Panel";
+
+type Track = {
+  id: number;
+  name: string;
+};
+
+const INITIAL_TRACKS: Track[] = [
+  { id: 1, name: "Track 1 (placeholder)" },
+  { id: 2, name: "Track 2 (placeholder)" },
+  { id: 3, name: "Track 3 (placeholder)" },
+];
 
 function App() {
   const [audioStarted, setAudioStarted] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [bpm, setBpm] = useState(120);
 
-  // Keep Tone.js BPM in sync with React
+  const synthRef = useRef<Tone.Synth | null>(null);
+  const loopRef = useRef<Tone.Loop | null>(null);
+
+  // Keep Tone.Transport BPM in sync with UI
   useEffect(() => {
     Tone.Transport.bpm.value = bpm;
   }, [bpm]);
 
-  // Initialize Audio Engine (browser requires user gesture)
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      loopRef.current?.dispose();
+      synthRef.current?.dispose();
+    };
+  }, []);
+
   const handleStartEngine = async () => {
+    if (audioStarted) return;
+
+    // Required by browsers: must be triggered from user gesture
     await Tone.start();
-    console.log("Audio Engine Started");
+
+    synthRef.current = new Tone.Synth().toDestination();
+
+    loopRef.current = new Tone.Loop((time) => {
+      // Simple test tick so we know the engine works
+      synthRef.current?.triggerAttackRelease("C4", "16n", time);
+    }, "4n").start(0);
+
     setAudioStarted(true);
   };
 
-  // Play simple metronome click
   const handlePlay = async () => {
-    if (!audioStarted) return;
-
-    const synth = new Tone.Synth().toDestination();
-
-    const loop = new Tone.Loop((time) => {
-      synth.triggerAttackRelease("C2", "8n", time);
-    }, "4n").start(0);
-
-    console.log(loop); // prevent TS unused warning
-
+    if (!audioStarted || isPlaying) return;
     Tone.Transport.start();
     setIsPlaying(true);
   };
 
-  // Stop Transport
   const handleStop = async () => {
+    if (!audioStarted || !isPlaying) return;
     Tone.Transport.stop();
-    Tone.Transport.cancel(); // remove scheduled events
     setIsPlaying(false);
   };
 
-  const handleChangeBpm = (value: number) => {
-    if (value < 40 || value > 240) return;
-    setBpm(value);
-  };
-
   return (
-    <main className="app">
-      <h1>Web DAW Toolkit</h1>
+    <div style={{ padding: "1rem", fontFamily: "system-ui" }}>
+      <h1>Toolkit Web DAW</h1>
 
       <TransportBar
         audioStarted={audioStarted}
         isPlaying={isPlaying}
         bpm={bpm}
-        onChangeBpm={handleChangeBpm}
+        onChangeBpm={setBpm}
         onStartEngine={handleStartEngine}
         onPlay={handlePlay}
         onStop={handleStop}
       />
 
-      <section className="workspace" style={{ marginTop: "2rem" }}>
-        <div style={{ padding: "1rem", border: "1px solid #444" }}>
-          <p>DAW Workspace Placeholder</p>
-          <p>Tracks / Timeline / Mixer UI coming next</p>
-        </div>
-      </section>
-    </main>
+      <Panel title="Tracks">
+        <ul style={{ marginTop: "0.5rem" }}>
+          {INITIAL_TRACKS.map((track) => (
+            <li key={track.id}>{track.name}</li>
+          ))}
+        </ul>
+      </Panel>
+    </div>
   );
 }
 
