@@ -1,90 +1,83 @@
 // /workspaces/toolkit/app/src/audio/sequencerEngine.ts
+
 import * as Tone from "tone";
 import type { SequencerPattern } from "../types/Sequencer";
 
 /**
- * SequencerEngine
- * ----------------
- * A very simple step-sequencer playback engine.
- * Each step fires once per grid position depending on:
- *    - BPM (handled by Tone.Transport)
- *    - active lanes
- *    - active steps in pattern.grid
+ * Very simple step sequencer engine:
+ * - Reads a SequencerPattern (steps + lanes[steps:boolean[]])
+ * - On each 16th-note tick, checks which lanes are "on" for that step
+ * - Triggers a short synth ping for active steps
  *
- * For now, each lane is a percussive "MetalSynth" sound.
- * This keeps it simple and fully functional while we expand.
+ * This is intentionally minimal and UI-driven. All “truth” for the grid
+ * lives in React state; the engine only *plays* whatever pattern it’s given.
  */
 export class SequencerEngine {
-  private pattern: SequencerPattern | null = null;
-  private loop: Tone.Loop | null = null;
+  private pattern: SequencerPattern | null;
+  private loop: Tone.Loop | null;
 
-  // Tone synths for each lane
-  private synths: Record<string, Tone.MetalSynth> = {};
-
-  constructor() {}
-
-  /** Load a new pattern */
-  loadPattern(pattern: SequencerPattern) {
-    this.pattern = pattern;
-
-    // Create a synth per lane if not exists
-    pattern.lanes.forEach((lane) => {
-      if (!this.synths[lane.id]) {
-        this.synths[lane.id] = new Tone.MetalSynth({
-          octaves: 1.5,
-          resonance: 400,
-          harmonicity: 5.1,
-        }).toDestination();
-      }
-    });
+  constructor(pattern?: SequencerPattern) {
+    this.pattern = pattern ?? null;
+    this.loop = null;
   }
 
-  /** Start step sequencing */
+  /**
+   * Update the current pattern.
+   * Safe to call while running; next tick will use the new data.
+   */
+  setPattern(pattern: SequencerPattern) {
+    this.pattern = pattern;
+  }
+
+  /**
+   * Start the sequencer loop. If there is no valid pattern, this is a no-op.
+   */
   start() {
-    if (!this.pattern) return;
+    if (!this.pattern || this.loop) return;
 
-    // If a previous loop exists, remove it
-    if (this.loop) {
-      this.loop.dispose();
-      this.loop = null;
-    }
+    const { steps, lanes } = this.pattern;
+    if (!steps || lanes.length === 0) return;
 
-    // Create playback loop
-    this.loop = new Tone.Loop((/* time */) => {
-      if (!this.pattern) return;
+    this.loop = new Tone.Loop((time) => {
+      // Current 16th-note step index based on Transport ticks
+      const currentStep =
+        Math.floor(Tone.Transport.ticks / Tone.Transport.PPQ) % steps;
 
-      const step = this.pattern.position;
+      for (const lane of lanes) {
+        const isOn = lane.steps[currentStep];
+        if (!isOn) continue;
 
-      // Iterate lanes → if step is active → trigger synth
-      this.pattern.lanes.forEach((lane) => {
-        const active = lane.steps[step];
-        if (active) {
-          const synth = this.synths[lane.id];
-          synth?.triggerAttackRelease("C4", "16n");
-        }
-      });
-
-      // Advance the playhead
-      this.pattern.position =
-        (this.pattern.position + 1) % this.pattern.steps;
+        // Simple tone for now – you can later swap per-lane voices
+        const synth = new Tone.Synth().toDestination();
+        synth.triggerAttackRelease("C4", "16n", time);
+      }
     }, "16n");
 
     this.loop.start(0);
-    Tone.Transport.start();
+
+    if (Tone.Transport.state !== "started") {
+      Tone.Transport.start();
+    }
   }
 
-  /** Stop playback without destroying the pattern */
+  /**
+   * Stop the sequencer loop but leave Transport state alone.
+   */
   stop() {
     if (this.loop) {
       this.loop.stop();
+      this.loop.dispose();
+      this.loop = null;
     }
-    Tone.Transport.stop();
   }
 
-  /** Hard reset to step 0 */
-  reset() {
-    if (this.pattern) {
-      this.pattern.position = 0;
-    }
+  /**
+   * Cleanup everything.
+   */
+  dispose() {
+    this.stop();
+    this.pattern = null;
   }
 }
+
+export default SequencerEngine;
