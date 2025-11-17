@@ -1,3 +1,6 @@
-export function AppShell({ children }: { children: React.ReactNode }) {
-  return <div className="app-shell">{children}</div>;
+// src/components/layout/AppShell.tsx
+type Props = { children: React.ReactNode };
+
+export function AppShell({ children }: Props) {
+  return <main className="app-shell">{children}</main>;
 }
