@@ -1,10 +1,11 @@
-name: Deploy Vite app to GitHub Pages
+name: Deploy web DAW to GitHub Pages
 
 on:
   push:
     branches: [ "main" ]
   workflow_dispatch:
 
+# Required permissions for GitHub Pages
 permissions:
   contents: read
   pages: write
@@ -12,12 +13,11 @@ permissions:
 
 concurrency:
   group: "pages"
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -30,26 +30,27 @@ jobs:
           cache-dependency-path: app/package-lock.json
 
       - name: Install dependencies
-        working-directory: app
+        working-directory: ./app
         run: npm ci
 
       - name: Build Vite app
-        working-directory: app
+        working-directory: ./app
         run: npm run build
 
-      - name: Upload Pages artifact
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: app/dist
+          path: ./app/dist
 
   deploy:
+    needs: build
+    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    needs: build
-    runs-on: ubuntu-latest
-    name: Deploy to GitHub Pages
-
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
