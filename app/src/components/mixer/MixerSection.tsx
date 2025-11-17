@@ -6,32 +6,46 @@ type Props = {
   tracks: Track[];
   onChangeVolume: (id: string, volumeDb: number) => void;
   onChangePan: (id: string, pan: number) => void;
+  onToggleMute: (id: string) => void;
+  onToggleSolo: (id: string) => void;
 };
 
-export function MixerSection({ tracks, onChangeVolume, onChangePan }: Props) {
-  if (!tracks.length) return null;
+export function MixerSection({
+  tracks,
+  onChangeVolume,
+  onChangePan,
+  onToggleMute,
+  onToggleSolo,
+}: Props) {
+  if (!tracks.length) {
+    return (
+      <div className="rounded-xl border border-slate-800 bg-slate-900/60 px-4 py-6 text-sm text-slate-400">
+        Mixer will appear here once you add tracks.
+      </div>
+    );
+  }
+
+  // Optionally, keep groups first
+  const ordered = [...tracks].sort((a, b) => {
+    if (a.isGroup && !b.isGroup) return -1;
+    if (!a.isGroup && b.isGroup) return 1;
+    return a.id.localeCompare(b.id);
+  });
 
   return (
-    <section className="rounded-xl border border-slate-800 bg-slate-900/40 p-4">
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-xs uppercase tracking-wide text-slate-400">
-          Mixer
-        </h2>
-        <span className="text-[10px] text-slate-500">
-          Volume (dB) · Pan (L/R)
-        </span>
-      </div>
-
-      <div className="flex gap-4 overflow-x-auto">
-        {tracks.map((track) => (
+    <div className="rounded-xl border border-slate-800 bg-slate-900/60 px-4 py-4 overflow-x-auto">
+      <div className="flex gap-4">
+        {ordered.map((track) => (
           <MixerChannel
             key={track.id}
             track={track}
             onChangeVolume={onChangeVolume}
             onChangePan={onChangePan}
+            onToggleMute={onToggleMute}
+            onToggleSolo={onToggleSolo}
           />
         ))}
       </div>
-    </section>
+    </div>
   );
 }

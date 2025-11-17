@@ -1,34 +1,18 @@
 // /workspaces/toolkit/app/src/App.tsx
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as Tone from "tone";
+
+import type { Track } from "./types/Track";
+import { initialTracks } from "./state/initialTracks";
 
 import { TransportBar } from "./components/transport/TransportBar";
 import { TrackList } from "./components/tracks/TrackList";
-import { StepSequencer } from "./components/sequencer/StepSequencer";
+import { MixerSection } from "./components/mixer/MixerSection";
 
-import { initialTracks } from "./state/initialTracks";
-import type { Track } from "./types/Track";
-import type {
-  SequencerPattern,
-  SequencerLaneId,
-} from "./types/Sequencer";
-
-const initialPattern: SequencerPattern = {
-  id: "pattern-1",
-  stepsPerBar: 16,
-  bars: 1,
-  lanes: [
-    { id: "kick", label: "Kick",  color: "#22c55e" },
-    { id: "snare", label: "Snare", color: "#f97316" },
-    { id: "hihat", label: "Hi-Hat", color: "#eab308" },
-    { id: "perc", label: "Perc",  color: "#a855f7" },
-  ],
-  grid: {
-    kick:  Array(16).fill(false),
-    snare: Array(16).fill(false),
-    hihat: Array(16).fill(false),
-    perc:  Array(16).fill(false),
-  },
+type TrackNodes = {
+  [id: string]: {
+    channel: Tone.Channel;
+  };
 };
 
 function App() {
@@ -36,26 +20,30 @@ function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [bpm, setBpm] = useState(120);
   const [tracks, setTracks] = useState<Track[]>(initialTracks);
-  const [pattern, setPattern] = useState<SequencerPattern>(initialPattern);
 
-  // --- Transport / engine ---
+  // One Tone channel per track
+  const trackNodesRef = useRef<TrackNodes>({});
 
-  const handleStartEngine = async () => {
+  //
+  // AUDIO ENGINE BOOTSTRAP
+  //
+  const ensureAudioStarted = async () => {
+    if (audioStarted) return;
+
     await Tone.start();
+    Tone.Transport.bpm.value = bpm;
     setAudioStarted(true);
   };
 
+  const handleStartEngine = async () => {
+    await ensureAudioStarted();
+  };
+
   const handlePlay = async () => {
-    if (!audioStarted) {
-      await Tone.start();
-      setAudioStarted(true);
-    }
+    await ensureAudioStarted();
     Tone.Transport.bpm.value = bpm;
     Tone.Transport.start();
     setIsPlaying(true);
-
-    // NOTE: scheduling actual sequencer playback will be wired
-    // here in the next iteration, using `pattern`.
   };
 
   const handleStop = () => {
@@ -66,10 +54,30 @@ function App() {
   const handleChangeBpm = (value: number) => {
     const clamped = Math.min(240, Math.max(40, value || 120));
     setBpm(clamped);
-    Tone.Transport.bpm.value = clamped;
+    if (audioStarted) {
+      Tone.Transport.bpm.value = clamped;
+    }
   };
 
-  // --- Track controls (mute / solo) ---
+  //
+  // TRACK STATE MUTATORS
+  //
+  const handleChangeVolume = (id: string, volumeDb: number) => {
+    setTracks((prev) =>
+      prev.map((t) =>
+        t.id === id ? { ...t, volumeDb } : t
+      )
+    );
+  };
+
+  const handleChangePan = (id: string, pan: number) => {
+    const clamped = Math.max(-1, Math.min(1, pan));
+    setTracks((prev) =>
+      prev.map((t) =>
+        t.id === id ? { ...t, pan: clamped } : t
+      )
+    );
+  };
 
   const handleToggleMute = (id: string) => {
     setTracks((prev) =>
@@ -89,8 +97,9 @@ function App() {
         t.id === id ? { ...t, isSolo: nextSolo } : t
       );
 
-      // Simple UI-only solo logic:
-      if (next.some((t) => t.isSolo)) {
+      // UI-level solo logic: if any track is solo, others visually “mute”
+      const anySolo = next.some((t) => t.isSolo);
+      if (anySolo) {
         next = next.map((t) =>
           t.isSolo ? { ...t, isMuted: false } : { ...t, isMuted: true }
         );
@@ -102,23 +111,51 @@ function App() {
     });
   };
 
-  // --- Sequencer state ---
-
-  const handleToggleStep = (laneId: SequencerLaneId, stepIndex: number) => {
-    setPattern((prev) => {
-      const laneSteps = prev.grid[laneId] ?? [];
-      const nextSteps = [...laneSteps];
-      nextSteps[stepIndex] = !nextSteps[stepIndex];
-
-      return {
-        ...prev,
-        grid: {
-          ...prev.grid,
-          [laneId]: nextSteps,
-        },
-      };
+  //
+  // SYNC TRACK STATE -> TONE.JS NODES
+  //
+  useEffect(() => {
+    // Ensure node per track
+    tracks.forEach((track) => {
+      if (!trackNodesRef.current[track.id]) {
+        trackNodesRef.current[track.id] = {
+          channel: new Tone.Channel({
+            volume: track.volumeDb,
+            pan: track.pan,
+            mute: track.isMuted,
+          }).toDestination(),
+        };
+      }
     });
-  };
+
+    // Apply gain/pan/mute/solo state to Tone
+    const anySolo = tracks.some((t) => t.isSolo);
+
+    tracks.forEach((track) => {
+      const node = trackNodesRef.current[track.id];
+      if (!node) return;
+
+      // volume & pan
+      node.channel.volume.value = track.volumeDb;
+      npm run BiquadFilterNode
+      node.channel.pan.value = track.pan;
+
+      // solo logic at engine level
+      if (anySolo) {
+        node.channel.mute = !track.isSolo;
+      } else {
+        node.channel.mute = track.isMuted;
+      }
+    });
+
+    // Cleanup removed tracks
+    Object.keys(trackNodesRef.current).forEach((id) => {
+      if (!tracks.find((t) => t.id === id)) {
+        trackNodesRef.current[id].channel.dispose();
+        delete trackNodesRef.current[id];
+      }
+    });
+  }, [tracks]);
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-50 flex flex-col">
@@ -130,6 +167,7 @@ function App() {
       </header>
 
       <main className="flex-1 px-6 py-4 space-y-4">
+        {/* STEP A: Transport */}
         <TransportBar
           audioStarted={audioStarted}
           isPlaying={isPlaying}
@@ -141,7 +179,7 @@ function App() {
         />
 
         <section className="grid grid-cols-12 gap-4">
-          {/* Left: track hierarchy */}
+          {/* STEP B: Track list + hierarchy */}
           <div className="col-span-4 space-y-3">
             <h2 className="text-xs uppercase tracking-wide text-slate-400">
               Track List
@@ -153,15 +191,18 @@ function App() {
             />
           </div>
 
-          {/* Right: sequencer (and later mixer / FX) */}
+          {/* STEP C: Mixer section */}
           <div className="col-span-8 space-y-3">
-            <StepSequencer
-              pattern={pattern}
-              onToggleStep={handleToggleStep}
+            <h2 className="text-xs uppercase tracking-wide text-slate-400">
+              Mixer
+            </h2>
+            <MixerSection
+              tracks={tracks}
+              onChangeVolume={handleChangeVolume}
+              onChangePan={handleChangePan}
+              onToggleMute={handleToggleMute}
+              onToggleSolo={handleToggleSolo}
             />
-
-            {/* Mixer / FX rack can live under or beside sequencer in the next phase */}
-            {/* <MixerSection ... /> */}
           </div>
         </section>
       </main>
