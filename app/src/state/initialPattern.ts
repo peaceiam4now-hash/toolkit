@@ -1,40 +1,31 @@
-// /workspaces/toolkit/app/src/state/initialPattern.ts
-import type { SequencerPattern } from "../types/SequencerPattern";
+// src/state/initialPattern.ts
+import type { SequencerPattern } from "../types/Sequencer";
 
-function makeSteps(stepsPerBar: number, fn: (i: number) => boolean) {
-  return Array.from({ length: stepsPerBar }, (_, i) => ({
-    index: i,
-    active: fn(i),
-    velocity: 1.0,
-  }));
-}
+export const STEPS_PER_BAR = 16;
 
 export const initialPattern: SequencerPattern = {
   id: "pattern-1",
   name: "Main Pattern",
-  stepsPerBar: 16,
   bars: 1,
+  stepsPerBar: STEPS_PER_BAR,
   lanes: [
     {
       id: "lane-kick",
       name: "Kick",
-      color: "#22c55e",
-      trackId: "track-1",
-      steps: makeSteps(16, (i) => i % 4 === 0),
+      color: "#f97316",
+      steps: Array(STEPS_PER_BAR).fill(false),
     },
     {
       id: "lane-snare",
       name: "Snare",
-      color: "#f97316",
-      trackId: "track-1",
-      steps: makeSteps(16, (i) => i % 8 === 4),
+      color: "#22c55e",
+      steps: Array(STEPS_PER_BAR).fill(false),
     },
     {
       id: "lane-hat",
       name: "Hat",
-      color: "#e5e7eb",
-      trackId: "track-1",
-      steps: makeSteps(16, (i) => i % 2 === 0),
+      color: "#38bdf8",
+      steps: Array(STEPS_PER_BAR).fill(false),
     },
   ],
 };
