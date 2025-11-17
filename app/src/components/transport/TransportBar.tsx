@@ -1,5 +1,4 @@
 // /workspaces/toolkit/app/src/components/transport/TransportBar.tsx
-import * as Tone from "tone";
 
 type Props = {
   audioStarted: boolean;
