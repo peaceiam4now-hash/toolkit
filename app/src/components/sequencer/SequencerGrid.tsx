@@ -1,45 +1,51 @@
-// /src/components/sequencer/SequencerGrid.tsx
-import type { SequencerPattern } from "../../types/SequencerTypes";
+// /workspaces/toolkit/app/src/components/sequencer/SequencerGrid.tsx
+import type {
+  SequencerPattern,
+  SequencerLaneId,
+} from "../../types/Sequencer";
 
 type Props = {
   pattern: SequencerPattern;
-  onToggleStep: (laneId: string, stepIndex: number) => void;
+  onToggleStep: (laneId: SequencerLaneId, stepIndex: number) => void;
 };
 
 export function SequencerGrid({ pattern, onToggleStep }: Props) {
-  return (
-    <div className="rounded-xl bg-slate-900/60 p-4 border border-slate-800 text-sm">
-      <h2 className="text-xs uppercase tracking-wide text-slate-400 mb-2">
-        Sequencer Grid
-      </h2>
-
-      <div className="space-y-3">
-        {pattern.lanes.map((lane) => (
-          <div key={lane.id}>
-            <div className="flex items-center gap-2 mb-1">
-              <span
-                className="h-3 w-3 rounded-full"
-                style={{ backgroundColor: lane.color }}
-              />
-              <span className="text-slate-200">{lane.name}</span>
-            </div>
-
-            <div className="grid grid-cols-16 gap-1">
-              {lane.steps.map((step, i) => (
-                <button
-                  key={i}
-                  onClick={() => onToggleStep(lane.id, i)}
-                  className={`h-6 rounded ${
-                    step.value
-                      ? "bg-indigo-500"
-                      : "bg-slate-800 hover:bg-slate-700"
-                  }`}
-                />
-              ))}
-            </div>
-          </div>
-        ))}
+  if (!pattern.lanes.length) {
+    return (
+      <div className="rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-4 text-sm text-slate-400">
+        No lanes configured yet. The Lunar Studios step sequencer will render
+        here.
       </div>
+    );
+  }
+
+  return (
+    <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 space-y-2">
+      {pattern.lanes.map((lane) => (
+        <div
+          key={lane.id}
+          className="flex items-center gap-3 py-1.5 border-b border-slate-800/60 last:border-b-0"
+        >
+          <div className="w-20 text-xs text-slate-300">{lane.label}</div>
+
+          <div className="flex gap-1 flex-1">
+            {lane.steps.map((on: boolean, stepIndex: number) => (
+              <button
+                key={stepIndex}
+                onClick={() => onToggleStep(lane.id, stepIndex)}
+                className={[
+                  "h-6 w-6 rounded-md border text-[10px] flex items-center justify-center",
+                  on
+                    ? "bg-indigo-500 border-indigo-400 text-slate-50 shadow-sm"
+                    : "bg-slate-900 border-slate-700 text-slate-500 hover:border-indigo-400/60",
+                ].join(" ")}
+              >
+                {stepIndex + 1}
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
