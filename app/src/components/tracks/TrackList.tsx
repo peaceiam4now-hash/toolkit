@@ -1,50 +1,62 @@
-// src/components/tracks/TrackList.tsx
+// /workspaces/toolkit/app/src/components/tracks/TrackList.tsx
 import type { Track } from "../../types/Track";
-import { TrackRow } from "./Track";
 
 type Props = {
   tracks: Track[];
-  onChangeVolume: (id: string, volumeDb: number) => void;
-  onChangePan: (id: string, pan: number) => void;
   onToggleMute: (id: string) => void;
   onToggleSolo: (id: string) => void;
 };
 
-export function TrackList({
-  tracks,
-  onChangeVolume,
-  onChangePan,
-  onToggleMute,
-  onToggleSolo,
-}: Props) {
-  return (
-    <section>
-      <header
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "baseline",
-          marginBottom: "0.5rem",
-        }}
-      >
-        <h2 style={{ fontSize: "0.9rem" }}>Tracks</h2>
-        <span style={{ fontSize: "0.75rem", opacity: 0.7 }}>
-          {tracks.length} tracks
-        </span>
-      </header>
-
-      <div>
-        {tracks.map((track) => (
-          <TrackRow
-            key={track.id}
-            track={track}
-            onChangeVolume={onChangeVolume}
-            onChangePan={onChangePan}
-            onToggleMute={onToggleMute}
-            onToggleSolo={onToggleSolo}
-          />
-        ))}
+export function TrackList({ tracks, onToggleMute, onToggleSolo }: Props) {
+  if (!tracks.length) {
+    return (
+      <div className="rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-4 text-sm text-slate-400">
+        No tracks yet. This is where your Lunar Studios hierarchy will live.
       </div>
-    </section>
+    );
+  }
+
+  return (
+    <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 space-y-2">
+      {tracks.map(track => (
+        <div
+          key={track.id}
+          className="flex items-center justify-between px-2 py-1.5 rounded-lg bg-slate-900/80"
+        >
+          <div className="flex items-center gap-2">
+            <span
+              className="h-3 w-3 rounded-full"
+              style={{ backgroundColor: track.color }}
+            />
+            <span className="text-sm text-slate-100">{track.name}</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => onToggleSolo(track.id)}
+              className={`px-2 py-0.5 rounded text-xs font-semibold border
+                ${
+                  track.isSolo
+                    ? "bg-yellow-400 text-slate-900 border-yellow-300"
+                    : "bg-slate-800 text-slate-200 border-slate-700"
+                }`}
+            >
+              S
+            </button>
+            <button
+              onClick={() => onToggleMute(track.id)}
+              className={`px-2 py-0.5 rounded text-xs font-semibold border
+                ${
+                  track.isMuted
+                    ? "bg-rose-500 text-white border-rose-400"
+                    : "bg-slate-800 text-slate-200 border-slate-700"
+                }`}
+            >
+              M
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }

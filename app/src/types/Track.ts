@@ -1,17 +1,19 @@
 // src/types/Track.ts
-// Canonical JSON contract for a single track's mixer state.
+export type TrackKind = "audio" | "instrument" | "group";
 
-export type Track = {
-  id: string;              // stable string id
-  name: string;            // display name
-  color: string;           // UI color token
-  isGroup: boolean;        // folder / group track flag
+export interface Track {
+  id: string;
+  name: string;
+  kind: TrackKind;
+  color: string;
+  isGroup: boolean;
   parentId?: string | null;
+  children?: Track[];
 
-  // Mixer state (this is your "JSON contract" the AI can read/write)
-  volumeDb: number;        // -60..+6 dB
-  pan: number;             // -1 (L) .. 0 .. +1 (R)
+  volumeDb: number; // dB
+  pan: number;      // -1..1
+
   isMuted: boolean;
   isSolo: boolean;
-  isArmed: boolean;
-};
+  armed: boolean;
+}

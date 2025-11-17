@@ -1,4 +1,4 @@
-// app/src/components/transport/TransportBar.tsx
+// /workspaces/toolkit/app/src/components/transport/TransportBar.tsx
 
 type Props = {
   audioStarted: boolean;
@@ -7,7 +7,8 @@ type Props = {
   onChangeBpm: (value: number) => void;
   onStartEngine: () => Promise<void>;
   onPlay: () => Promise<void>;
-  onStop: () => Promise<void>;
+  // Stop can be sync or async; keep it flexible
+  onStop: () => void | Promise<void>;
 };
 
 export function TransportBar({
@@ -20,110 +21,60 @@ export function TransportBar({
   onStop,
 }: Props) {
   return (
-    <section
-      className="transport"
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "12px",
-        padding: "10px 14px",
-        borderRadius: "999px",
-        background:
-          "linear-gradient(135deg, rgba(15,23,42,0.9), rgba(30,64,175,0.8))",
-        border: "1px solid rgba(129,140,248,0.6)",
-        boxShadow:
-          "0 18px 45px rgba(15,23,42,0.8), 0 0 0 1px rgba(129,140,248,0.3)",
-        backdropFilter: "blur(18px)",
-      }}
-    >
+    <section className="transport flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-900/70 border border-slate-700/70 shadow-lg backdrop-blur-md">
+      {/* Engine init */}
       <button
         onClick={onStartEngine}
         disabled={audioStarted}
-        style={{
-          padding: "6px 12px",
-          borderRadius: "999px",
-          border: "none",
-          cursor: audioStarted ? "default" : "pointer",
-          fontSize: "0.75rem",
-          fontWeight: 600,
-          textTransform: "uppercase",
-          letterSpacing: "0.08em",
-          background: audioStarted
-            ? "rgba(34,197,94,0.16)"
-            : "radial-gradient(circle at 20% 0%, #22c55e, #16a34a)",
-          color: audioStarted ? "#bbf7d0" : "#022c22",
-          boxShadow: audioStarted
-            ? "0 0 0 1px rgba(34,197,94,0.5)"
-            : "0 0 18px rgba(34,197,94,0.7)",
-        }}
+        className="px-3 py-1.5 rounded-lg text-sm font-medium
+                   disabled:opacity-50 disabled:cursor-not-allowed
+                   bg-emerald-500 hover:bg-emerald-400 text-slate-900
+                   transition-colors"
       >
         {audioStarted ? "Engine Ready" : "Init Audio Engine"}
       </button>
 
-      <button
-        onClick={onPlay}
-        disabled={!audioStarted || isPlaying}
-        style={{
-          padding: "6px 12px",
-          borderRadius: "999px",
-          border: "1px solid rgba(248,250,252,0.7)",
-          background: isPlaying
-            ? "rgba(248,250,252,0.15)"
-            : "rgba(15,23,42,0.9)",
-          color: "#f9fafb",
-          fontSize: "0.8rem",
-          fontWeight: 600,
-          cursor: !audioStarted || isPlaying ? "default" : "pointer",
-        }}
-      >
-        ▶ Play
-      </button>
+      {/* Play / Stop */}
+      <div className="flex items-center gap-2">
+        <button
+          onClick={onPlay}
+          disabled={!audioStarted || isPlaying}
+          className="px-3 py-1.5 rounded-full text-sm font-semibold
+                     disabled:opacity-40 disabled:cursor-not-allowed
+                     bg-indigo-500 hover:bg-indigo-400 text-white
+                     transition-colors"
+        >
+          ▶ Play
+        </button>
 
-      <button
-        onClick={onStop}
-        disabled={!audioStarted || !isPlaying}
-        style={{
-          padding: "6px 12px",
-          borderRadius: "999px",
-          border: "1px solid rgba(248,250,252,0.4)",
-          background: "rgba(15,23,42,0.9)",
-          color: "#f9fafb",
-          fontSize: "0.8rem",
-          fontWeight: 600,
-          cursor: !audioStarted || !isPlaying ? "default" : "pointer",
-        }}
-      >
-        ■ Stop
-      </button>
+        <button
+          onClick={onStop}
+          disabled={!audioStarted || !isPlaying}
+          className="px-3 py-1.5 rounded-full text-sm font-semibold
+                     disabled:opacity-40 disabled:cursor-not-allowed
+                     bg-rose-500 hover:bg-rose-400 text-white
+                     transition-colors"
+        >
+          ■ Stop
+        </button>
+      </div>
 
-      <label
-        style={{
-          marginLeft: "auto",
-          display: "flex",
-          alignItems: "center",
-          gap: "6px",
-          fontSize: "0.75rem",
-          color: "#e5e7eb",
-        }}
-      >
-        BPM
+      {/* BPM control */}
+      <div className="flex items-center gap-2 ml-4 text-sm text-slate-100">
+        <span className="uppercase tracking-wide text-xs text-slate-400">
+          Tempo
+        </span>
         <input
           type="number"
           min={40}
           max={240}
           value={bpm}
           onChange={(e) => onChangeBpm(Number(e.target.value || 0))}
-          style={{
-            width: 64,
-            padding: "4px 8px",
-            borderRadius: "999px",
-            border: "1px solid rgba(148,163,184,0.6)",
-            background: "rgba(15,23,42,0.9)",
-            color: "#e5e7eb",
-            fontSize: "0.75rem",
-          }}
+          className="w-16 px-2 py-1 rounded-md bg-slate-800 border border-slate-700
+                     text-slate-100 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
         />
-      </label>
+        <span className="text-xs text-slate-400">BPM</span>
+      </div>
     </section>
   );
 }

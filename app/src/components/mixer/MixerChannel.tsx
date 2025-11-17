@@ -1,5 +1,4 @@
 // /workspaces/toolkit/app/src/components/mixer/MixerChannel.tsx
-
 import type { Track } from "../../types/Track";
 
 type Props = {
@@ -9,23 +8,24 @@ type Props = {
 };
 
 export function MixerChannel({ track, onChangeVolume, onChangePan }: Props) {
-  const panLabel =
-    track.pan < 0
-      ? `${Math.abs(track.pan * 100).toFixed(0)}% L`
-      : track.pan > 0
-      ? `${(track.pan * 100).toFixed(0)}% R`
-      : "C";
-
   return (
-    <div className="mixer-channel">
-      <div
-        className="mixer-channel__header"
-        style={{ borderBottom: `2px solid ${track.color}` }}
-      >
-        <span className="mixer-channel__name">{track.name}</span>
+    <div className="flex flex-col items-center w-28 rounded-lg bg-slate-900/70 border border-slate-800 px-2 py-3">
+      {/* Track label */}
+      <div className="flex items-center gap-1 mb-2">
+        <span
+          className="h-2 w-2 rounded-full"
+          style={{ backgroundColor: track.color }}
+        />
+        <span className="text-xs text-slate-100 truncate max-w-[5rem]">
+          {track.name}
+        </span>
       </div>
 
-      <div className="mixer-channel__fader">
+      {/* Volume fader */}
+      <div className="flex flex-col items-center mb-2">
+        <span className="text-[10px] text-slate-400 mb-1">
+          {track.volumeDb.toFixed(1)} dB
+        </span>
         <input
           type="range"
           min={-60}
@@ -33,26 +33,33 @@ export function MixerChannel({ track, onChangeVolume, onChangePan }: Props) {
           step={0.5}
           value={track.volumeDb}
           onChange={(e) =>
-            onChangeVolume(track.id, Number(e.target.value || 0))
+            onChangeVolume(track.id, Number(e.target.value))
           }
-          className="mixer-channel__fader-input"
+          className="h-24 w-2 accent-indigo-400 [writing-mode:bt-lr] rotate-180"
         />
-        <div className="mixer-channel__volume-label">
-          {track.volumeDb.toFixed(1)} dB
-        </div>
       </div>
 
-      <div className="mixer-channel__pan">
+      {/* Pan control */}
+      <div className="flex flex-col items-center mt-1 w-full">
+        <span className="text-[10px] text-slate-400 mb-1">
+          Pan {track.pan.toFixed(2)}
+        </span>
         <input
           type="range"
           min={-1}
           max={1}
           step={0.01}
           value={track.pan}
-          onChange={(e) => onChangePan(track.id, Number(e.target.value || 0))}
-          className="mixer-channel__pan-input"
+          onChange={(e) =>
+            onChangePan(track.id, Number(e.target.value))
+          }
+          className="w-full accent-emerald-400"
         />
-        <div className="mixer-channel__pan-label">{panLabel}</div>
+        <div className="flex justify-between w-full text-[9px] text-slate-500 mt-0.5">
+          <span>L</span>
+          <span>C</span>
+          <span>R</span>
+        </div>
       </div>
     </div>
   );
