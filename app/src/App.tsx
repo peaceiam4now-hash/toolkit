@@ -1,56 +1,76 @@
-import { useState } from "react";
-import "./App.css";
+// /workspaces/toolkit/app/src/App.tsx
+import { useEffect, useState } from "react";
+import * as Tone from "tone";
 
 import { TransportBar } from "./components/transport/TransportBar";
-import { initAudioEngine, startTestLoop, stopTransport } from "./audio/toneEngine";
 
 function App() {
   const [audioStarted, setAudioStarted] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [bpm, setBpm] = useState(120);
+
+  // Keep Tone.Transport BPM in sync with state
+  useEffect(() => {
+    Tone.getContext().resume().catch(() => {
+      // ignore if context not yet allowed – gets fixed on first user gesture
+    });
+    Tone.Transport.bpm.value = bpm;
+  }, [bpm]);
 
   const handleStartEngine = async () => {
-    if (audioStarted) return;
-    await initAudioEngine();
+    await Tone.start(); // MUST be called from a click handler
+    await Tone.getContext().resume();
     setAudioStarted(true);
   };
 
   const handlePlay = async () => {
-    if (!audioStarted || isPlaying) return;
-    await startTestLoop();
+    if (!audioStarted) {
+      await handleStartEngine();
+    }
+
+    // simple test loop – 1 bar of a metronome-ish click
+    const synth = new Tone.MembraneSynth().toDestination();
+
+    const loop = new Tone.Loop((time) => {
+      synth.triggerAttackRelease("C2", "8n", time);
+    }, "4n").start(0);
+
+    Tone.Transport.start();
     setIsPlaying(true);
+
+    // optional: store loop somewhere (ref) to stop/dispose later
   };
 
   const handleStop = async () => {
-    if (!audioStarted || !isPlaying) return;
-    stopTransport();
+    Tone.Transport.stop();
+    Tone.Transport.cancel(); // clear scheduled events
     setIsPlaying(false);
+  };
+
+  const handleChangeBpm = (value: number) => {
+    const clamped = Math.min(240, Math.max(40, value || 0));
+    setBpm(clamped);
   };
 
   return (
     <div className="app">
-      <header className="app-header">
-        <button>Toolkit Web DAW</button>
-        <span className="app-bpm-label">BPM: 120</span>
-      </header>
+      <h1>Web DAW Prototype</h1>
 
-      <main className="app-main">
-        <TransportBar
-          audioStarted={audioStarted}
-          isPlaying={isPlaying}
-          onStartEngine={handleStartEngine}
-          onPlay={handlePlay}
-          onStop={handleStop}
-        />
+      <TransportBar
+        audioStarted={audioStarted}
+        isPlaying={isPlaying}
+        bpm={bpm}
+        onChangeBpm={handleChangeBpm}
+        onStartEngine={handleStartEngine}
+        onPlay={handlePlay}
+        onStop={handleStop}
+      />
 
-        <section className="tracks">
-          <p>Track 1 – Placeholder</p>
-          <p>Track 2 – Placeholder</p>
-        </section>
-
-        <section className="timeline">
-          <p>| 1 | 2 | 3 | 4 |</p>
-          <p>[empty grid]</p>
-        </section>
+      {/* Track placeholder UI goes here */}
+      <main className="tracks">
+        {/* TODO: TrackLane components */}
+        <div className="track-placeholder">Track 1 (placeholder)</div>
+        <div className="track-placeholder">Track 2 (placeholder)</div>
       </main>
     </div>
   );

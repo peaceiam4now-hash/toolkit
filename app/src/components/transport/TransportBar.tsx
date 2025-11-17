@@ -1,22 +1,23 @@
-// src/components/transport/TransportBar.tsx
+// /workspaces/toolkit/app/src/components/transport/TransportBar.tsx
+
 type Props = {
   audioStarted: boolean;
   isPlaying: boolean;
   bpm: number;
+  onChangeBpm: (value: number) => void;
   onStartEngine: () => Promise<void>;
-  onPlay: () => Promise<void> | void;
-  onStop: () => Promise<void> | void;
-  onChangeBpm: (bpm: number) => void;
+  onPlay: () => Promise<void>;
+  onStop: () => Promise<void>;
 };
 
 export function TransportBar({
   audioStarted,
   isPlaying,
   bpm,
+  onChangeBpm,
   onStartEngine,
   onPlay,
   onStop,
-  onChangeBpm,
 }: Props) {
   return (
     <section className="transport">
@@ -32,8 +33,8 @@ export function TransportBar({
         Stop
       </button>
 
-      <label style={{ marginLeft: 16 }}>
-        BPM:
+      <label style={{ marginLeft: "1rem" }}>
+        BPM{" "}
         <input
           type="number"
           min={40}
