@@ -1,49 +1,57 @@
-import './App.css'
+// src/App.tsx
+import { useState } from "react";
+import * as Tone from "tone";
+import "./App.css";
 
 function App() {
+  const [audioReady, setAudioReady] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const handleInitAudio = async () => {
+    await Tone.start(); // This is the "unlock" after a user click
+    console.log("AudioContext started");
+    setAudioReady(true);
+  };
+
+  const handlePlayTestLoop = async () => {
+    if (!audioReady) {
+      await handleInitAudio();
+    }
+
+    // Simple test loop using a synth; replace later with real tracks
+    const synth = new Tone.Synth().toDestination();
+
+    const loop = new Tone.Loop((time) => {
+      synth.triggerAttackRelease("C4", "8n", time);
+    }, "4n").start(0);
+
+    await Tone.start();
+    Tone.Transport.start();
+    setIsPlaying(true);
+
+    // Stop after 4 bars for now so it doesn’t run forever
+    Tone.Transport.scheduleOnce(() => {
+      loop.stop();
+      Tone.Transport.stop();
+      setIsPlaying(false);
+    }, "+4m");
+  };
+
   return (
-    <div className="app-root">
-      <header className="app-header">
-        <h1>Web DAW Toolkit</h1>
-        <p>Browser-based audio playground built on GH Pages.</p>
-      </header>
+    <div className="App">
+      <h1>Web DAW – Toolkit</h1>
 
-      <main className="app-main">
-        <section className="app-card">
-          <h2>Phase 1: Playground Shell</h2>
-          <p>
-            This is the base React + Vite shell we&apos;ll use to assemble a
-            modern Web Audio workstation. No server, fully static.
-          </p>
-          <ul>
-            <li>React + Vite (GH Pages friendly)</li>
-            <li>Web Audio API under the hood</li>
-            <li>Reference engines from upstream DAWs</li>
-          </ul>
-        </section>
+      <button onClick={handleInitAudio} disabled={audioReady}>
+        {audioReady ? "Audio Ready ✅" : "Initialize Audio Engine"}
+      </button>
 
-        <section className="app-card">
-          <h2>Upstream Engines (read-only)</h2>
-          <p>
-            We keep reference implementations in <code>/upstreams</code>:
-          </p>
-          <ul>
-            <li><code>opendaw</code> – modular Web Audio engine</li>
-            <li><code>daw</code> – GridSound timeline &amp; UI</li>
-            <li><code>webdaw-gh</code> – simple browser DAW concepts</li>
-          </ul>
-          <p>
-            We&apos;ll pull concepts from these, not copy their UI verbatim.
-          </p>
-        </section>
+      <button onClick={handlePlayTestLoop} disabled={!audioReady || isPlaying}>
+        {isPlaying ? "Playing..." : "Play Test Loop"}
+      </button>
 
-        <section className="app-card">
-          <h2>Status</h2>
-          <p>Core scaffold is live. Next up: audio engine bootstrap.</p>
-        </section>
-      </main>
+      {/* your existing track placeholders here */}
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
