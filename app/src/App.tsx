@@ -1,55 +1,43 @@
-// src/App.tsx
-import { useState } from "react";
-import * as Tone from "tone";
+// /workspaces/toolkit/app/src/App.tsx
 import "./App.css";
+import * as Tone from "tone";
+import { useState } from "react";
 
 function App() {
-  const [audioReady, setAudioReady] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
 
-  const handleInitAudio = async () => {
-    await Tone.start(); // This is the "unlock" after a user click
-    console.log("AudioContext started");
-    setAudioReady(true);
-  };
-
-  const handlePlayTestLoop = async () => {
-    if (!audioReady) {
-      await handleInitAudio();
-    }
-
-    // Simple test loop using a synth; replace later with real tracks
-    const synth = new Tone.Synth().toDestination();
-
-    const loop = new Tone.Loop((time) => {
-      synth.triggerAttackRelease("C4", "8n", time);
-    }, "4n").start(0);
-
-    await Tone.start();
-    Tone.Transport.start();
-    setIsPlaying(true);
-
-    // Stop after 4 bars for now so it doesn’t run forever
-    Tone.Transport.scheduleOnce(() => {
-      loop.stop();
+  const handlePlayToggle = async () => {
+    await Tone.start(); // user gesture: this is in a click handler
+    if (isPlaying) {
       Tone.Transport.stop();
       setIsPlaying(false);
-    }, "+4m");
+    } else {
+      Tone.Transport.start();
+      setIsPlaying(true);
+    }
   };
 
   return (
-    <div className="App">
-      <h1>Web DAW – Toolkit</h1>
+    <div className="app-root">
+      <header className="transport-bar">
+        <button onClick={handlePlayToggle}>
+          {isPlaying ? "Stop" : "Play"}
+        </button>
+        <span className="bpm-label">BPM: 120</span>
+      </header>
 
-      <button onClick={handleInitAudio} disabled={audioReady}>
-        {audioReady ? "Audio Ready ✅" : "Initialize Audio Engine"}
-      </button>
+      <main className="daw-layout">
+        <aside className="track-list">
+          <div className="track-row">Track 1 – Placeholder</div>
+          <div className="track-row">Track 2 – Placeholder</div>
+        </aside>
 
-      <button onClick={handlePlayTestLoop} disabled={!audioReady || isPlaying}>
-        {isPlaying ? "Playing..." : "Play Test Loop"}
-      </button>
-
-      {/* your existing track placeholders here */}
+        <section className="timeline">
+          {/* future: grid + clips */}
+          <div className="timeline-ruler">| 1 | 2 | 3 | 4 |</div>
+          <div className="timeline-grid">[empty grid]</div>
+        </section>
+      </main>
     </div>
   );
 }
