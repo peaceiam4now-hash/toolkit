@@ -7,7 +7,7 @@ type Props = {
   onChangeBpm: (value: number) => void;
   onStartEngine: () => Promise<void>;
   onPlay: () => Promise<void>;
-  // Stop can be sync or async; keep it flexible
+  // Stop can be sync or async
   onStop: () => void | Promise<void>;
 };
 

@@ -16,40 +16,36 @@ export function MixerChannel({
   onToggleMute,
   onToggleSolo,
 }: Props) {
-  // volume slider in dB
-  const handleVolumeInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = Number(e.target.value);
-    onChangeVolume(track.id, value);
+  const handleVolumeInput = (value: string) => {
+    const num = Number(value);
+    const clamped = Math.max(-60, Math.min(6, isNaN(num) ? -12 : num));
+    onChangeVolume(track.id, clamped);
   };
 
-  // pan slider -1..1
-  const handlePanInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = Number(e.target.value);
-    onChangePan(track.id, value);
+  const handlePanInput = (value: string) => {
+    const num = Number(value);
+    const clamped = Math.max(-1, Math.min(1, isNaN(num) ? 0 : num));
+    onChangePan(track.id, clamped);
   };
 
   return (
-    <div className="flex flex-col items-center w-32 rounded-xl bg-slate-900/80 border border-slate-800 px-2 py-3">
+    <div className="flex flex-col items-center w-32 rounded-xl bg-slate-950/70 border border-slate-800 px-3 py-3 shadow-inner">
       {/* Header */}
       <div className="flex items-center gap-2 mb-2">
         <span
-          className="h-2 w-2 rounded-full"
+          className="h-3 w-3 rounded-full"
           style={{ backgroundColor: track.color }}
         />
-        <span
-          className={`text-xs truncate max-w-[5rem] ${
-            track.isGroup ? "font-semibold text-slate-50" : "text-slate-200"
-          }`}
-        >
+        <span className="text-xs font-medium text-slate-100 truncate">
           {track.name}
         </span>
       </div>
 
-      {/* Solo/Mute buttons */}
+      {/* Solo / Mute */}
       <div className="flex gap-1 mb-3">
         <button
           onClick={() => onToggleSolo(track.id)}
-          className={`px-2 py-0.5 rounded text-[11px] font-semibold border
+          className={`px-1.5 py-0.5 rounded text-[10px] font-semibold border
             ${
               track.isSolo
                 ? "bg-yellow-400 text-slate-900 border-yellow-300"
@@ -60,7 +56,7 @@ export function MixerChannel({
         </button>
         <button
           onClick={() => onToggleMute(track.id)}
-          className={`px-2 py-0.5 rounded text-[11px] font-semibold border
+          className={`px-1.5 py-0.5 rounded text-[10px] font-semibold border
             ${
               track.isMuted
                 ? "bg-rose-500 text-white border-rose-400"
@@ -72,42 +68,38 @@ export function MixerChannel({
       </div>
 
       {/* Volume fader */}
-      <div className="flex flex-col items-center gap-1 mb-3">
-        <span className="text-[10px] uppercase tracking-wide text-slate-400">
-          Vol
-        </span>
+      <div className="flex flex-col items-center mb-3">
+        <span className="text-[10px] text-slate-500 mb-1">VOL</span>
         <input
           type="range"
           min={-60}
           max={6}
           step={0.5}
           value={track.volumeDb}
-          onChange={handleVolumeInput}
-          className="h-24 w-8 rotate-[-90deg] origin-center"
+          onChange={(e) => handleVolumeInput(e.target.value)}
+          className="w-10 h-28 rotate-[-90deg] origin-center"
         />
-        <span className="text-[11px] text-slate-300 mt-6">
+        <span className="text-[10px] text-slate-400 mt-2">
           {track.volumeDb.toFixed(1)} dB
         </span>
       </div>
 
-      {/* Pan control */}
-      <div className="w-full mt-auto">
-        <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1">
-          <span>L</span>
-          <span className="uppercase tracking-wide">Pan</span>
-          <span>R</span>
-        </div>
+      {/* Pan */}
+      <div className="flex flex-col items-center">
+        <span className="text-[10px] text-slate-500 mb-1">PAN</span>
         <input
           type="range"
           min={-1}
           max={1}
-          step={0.01}
+          step={0.1}
           value={track.pan}
-          onChange={handlePanInput}
+          onChange={(e) => handlePanInput(e.target.value)}
           className="w-full"
         />
-        <div className="text-[11px] text-center text-slate-300 mt-1">
-          {track.pan.toFixed(2)}
+        <div className="flex justify-between w-full text-[10px] text-slate-500">
+          <span>L</span>
+          <span>C</span>
+          <span>R</span>
         </div>
       </div>
     </div>

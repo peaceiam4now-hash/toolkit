@@ -1,64 +1,89 @@
 // /workspaces/toolkit/app/src/components/effects/EffectsRack.tsx
-
-type EffectCardProps = {
-  name: string;
-};
-
-function EffectCard({ name }: EffectCardProps) {
-  return (
-    <div className="rounded-lg bg-slate-950/70 border border-slate-800 px-3 py-2">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs text-slate-100">{name}</span>
-        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium border border-indigo-400 bg-indigo-500/20 text-indigo-100">
-          On
-        </span>
-      </div>
-
-      <div className="flex gap-2">
-        <div className="flex-1">
-          <div className="text-[10px] text-slate-400 mb-0.5">Mix</div>
-          <input
-            type="range"
-            min={0}
-            max={100}
-            defaultValue={30}
-            className="w-full accent-indigo-400"
-          />
-        </div>
-        <div className="flex-1">
-          <div className="text-[10px] text-slate-400 mb-0.5">Tone</div>
-          <input
-            type="range"
-            min={0}
-            max={100}
-            defaultValue={60}
-            className="w-full accent-emerald-400"
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
+import { useState } from "react";
 
 export function EffectsRack() {
-  const effects = ["Reverb", "Delay", "Chorus", "Distortion"];
+  const [reverbSend, setReverbSend] = useState(0.3);
+  const [delaySend, setDelaySend] = useState(0.2);
+  const [chorusDepth, setChorusDepth] = useState(0.15);
+  const [distortionDrive, setDistortionDrive] = useState(0.1);
 
   return (
-    <section className="rounded-xl border border-slate-800 bg-slate-900/40 p-4">
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-xs uppercase tracking-wide text-slate-400">
-          Effects Rack
-        </h2>
-        <span className="text-[10px] text-slate-500">
-          Global send effects (UI only for now)
+    <div className="rounded-xl border border-slate-800 bg-slate-900/60 px-4 py-3 grid grid-cols-4 gap-4 text-xs">
+      {/* Reverb */}
+      <div className="flex flex-col items-center">
+        <span className="uppercase tracking-wide text-slate-400 mb-1">
+          Reverb
+        </span>
+        <input
+          type="range"
+          min={0}
+          max={1}
+          step={0.01}
+          value={reverbSend}
+          onChange={(e) => setReverbSend(Number(e.target.value))}
+          className="w-full"
+        />
+        <span className="mt-1 text-slate-300">
+          {(reverbSend * 100).toFixed(0)}%
         </span>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        {effects.map((name) => (
-          <EffectCard key={name} name={name} />
-        ))}
+      {/* Delay */}
+      <div className="flex flex-col items-center">
+        <span className="uppercase tracking-wide text-slate-400 mb-1">
+          Delay
+        </span>
+        <input
+          type="range"
+          min={0}
+          max={1}
+          step={0.01}
+          value={delaySend}
+          onChange={(e) => setDelaySend(Number(e.target.value))}
+          className="w-full"
+        />
+        <span className="mt-1 text-slate-300">
+          {(delaySend * 100).toFixed(0)}%
+        </span>
       </div>
-    </section>
+
+      {/* Chorus */}
+      <div className="flex flex-col items-center">
+        <span className="uppercase tracking-wide text-slate-400 mb-1">
+          Chorus
+        </span>
+        <input
+          type="range"
+          min={0}
+          max={1}
+          step={0.01}
+          value={chorusDepth}
+          onChange={(e) => setChorusDepth(Number(e.target.value))}
+          className="w-full"
+        />
+        <span className="mt-1 text-slate-300">
+          {(chorusDepth * 100).toFixed(0)}%
+        </span>
+      </div>
+
+      {/* Distortion */}
+      <div className="flex flex-col items-center">
+        <span className="uppercase tracking-wide text-slate-400 mb-1">
+          Drive
+        </span>
+        <input
+          type="range"
+          min={0}
+          max={1}
+          step={0.01}
+          value={distortionDrive}
+          onChange={(e) => setDistortionDrive(Number(e.target.value))}
+          className="w-full"
+        />
+        <span className="mt-1 text-slate-300">
+          {(distortionDrive * 100).toFixed(0)}%
+        </span>
+      </div>
+    </div>
   );
 }

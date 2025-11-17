@@ -1,19 +1,30 @@
 // /workspaces/toolkit/app/src/App.tsx
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import * as Tone from "tone";
-
-import type { Track } from "./types/Track";
-import { initialTracks } from "./state/initialTracks";
 
 import { TransportBar } from "./components/transport/TransportBar";
 import { TrackList } from "./components/tracks/TrackList";
 import { MixerSection } from "./components/mixer/MixerSection";
+import { SequencerGrid } from "./components/sequencer/SequencerGrid";
 
-type TrackNodes = {
-  [id: string]: {
-    channel: Tone.Channel;
+import type { Track } from "./types/Track";
+import type { SequencerPattern, SequencerLane } from "./types/Sequencer";
+import { initialTracks } from "./state/initialTracks";
+
+const STEPS_PER_BAR = 16;
+
+function buildInitialPattern(tracks: Track[]): SequencerPattern {
+  const lanes: SequencerLane[] = tracks.map((t) => ({
+    trackId: t.id,
+    label: t.name,
+    steps: new Array(STEPS_PER_BAR).fill(false),
+  }));
+
+  return {
+    stepsPerBar: STEPS_PER_BAR,
+    lanes,
   };
-};
+}
 
 function App() {
   const [audioStarted, setAudioStarted] = useState(false);
@@ -21,26 +32,25 @@ function App() {
   const [bpm, setBpm] = useState(120);
   const [tracks, setTracks] = useState<Track[]>(initialTracks);
 
-  // One Tone channel per track
-  const trackNodesRef = useRef<TrackNodes>({});
+  // Section E: sequencer pattern + current step (for visual playhead)
+  const [pattern, setPattern] = useState<SequencerPattern>(() =>
+    buildInitialPattern(initialTracks)
+  );
+  const [currentStep, setCurrentStep] = useState(0);
 
-  //
-  // AUDIO ENGINE BOOTSTRAP
-  //
-  const ensureAudioStarted = async () => {
-    if (audioStarted) return;
+  // --- Audio engine bootstrap -------------------------------------------------
 
+  const handleStartEngine = async () => {
     await Tone.start();
-    Tone.Transport.bpm.value = bpm;
     setAudioStarted(true);
   };
 
-  const handleStartEngine = async () => {
-    await ensureAudioStarted();
-  };
-
   const handlePlay = async () => {
-    await ensureAudioStarted();
+    if (!audioStarted) {
+      await Tone.start();
+      setAudioStarted(true);
+    }
+
     Tone.Transport.bpm.value = bpm;
     Tone.Transport.start();
     setIsPlaying(true);
@@ -54,36 +64,36 @@ function App() {
   const handleChangeBpm = (value: number) => {
     const clamped = Math.min(240, Math.max(40, value || 120));
     setBpm(clamped);
-    if (audioStarted) {
-      Tone.Transport.bpm.value = clamped;
-    }
+    Tone.Transport.bpm.value = clamped;
   };
 
-  //
-  // TRACK STATE MUTATORS
-  //
+  // --- Mixer handlers (Section C) --------------------------------------------
+
   const handleChangeVolume = (id: string, volumeDb: number) => {
     setTracks((prev) =>
-      prev.map((t) =>
-        t.id === id ? { ...t, volumeDb } : t
-      )
+      prev.map((t) => (t.id === id ? { ...t, volumeDb } : t))
     );
+
+    // Hook into Tone here when you have per-track nodes wired up
+    // const node = trackNodesRef.current[id];
+    // if (node?.channel) {
+    //   node.channel.volume.value = volumeDb;
+    // }
   };
 
   const handleChangePan = (id: string, pan: number) => {
     const clamped = Math.max(-1, Math.min(1, pan));
+
     setTracks((prev) =>
-      prev.map((t) =>
-        t.id === id ? { ...t, pan: clamped } : t
-      )
+      prev.map((t) => (t.id === id ? { ...t, pan: clamped } : t))
     );
+
+    // Optional Tone pan hook goes here.
   };
 
   const handleToggleMute = (id: string) => {
     setTracks((prev) =>
-      prev.map((t) =>
-        t.id === id ? { ...t, isMuted: !t.isMuted } : t
-      )
+      prev.map((t) => (t.id === id ? { ...t, isMuted: !t.isMuted } : t))
     );
   };
 
@@ -97,9 +107,8 @@ function App() {
         t.id === id ? { ...t, isSolo: nextSolo } : t
       );
 
-      // UI-level solo logic: if any track is solo, others visually “mute”
-      const anySolo = next.some((t) => t.isSolo);
-      if (anySolo) {
+      // Simple UI-only solo logic: if any solo is active, mute non-solo tracks
+      if (next.some((t) => t.isSolo)) {
         next = next.map((t) =>
           t.isSolo ? { ...t, isMuted: false } : { ...t, isMuted: true }
         );
@@ -111,51 +120,37 @@ function App() {
     });
   };
 
-  //
-  // SYNC TRACK STATE -> TONE.JS NODES
-  //
+  // --- Sequencer handlers (Section E) ----------------------------------------
+
+  const handleToggleStep = (trackId: string, stepIndex: number) => {
+    setPattern((prev) => {
+      const lanes = prev.lanes.map((lane) => {
+        if (lane.trackId !== trackId) return lane;
+        const nextSteps = [...lane.steps];
+        nextSteps[stepIndex] = !nextSteps[stepIndex];
+        return { ...lane, steps: nextSteps };
+      });
+
+      return { ...prev, lanes };
+    });
+  };
+
+  // Visual playhead that syncs to Tone.Transport
   useEffect(() => {
-    // Ensure node per track
-    tracks.forEach((track) => {
-      if (!trackNodesRef.current[track.id]) {
-        trackNodesRef.current[track.id] = {
-          channel: new Tone.Channel({
-            volume: track.volumeDb,
-            pan: track.pan,
-            mute: track.isMuted,
-          }).toDestination(),
-        };
-      }
-    });
+    const id = Tone.Transport.scheduleRepeat(() => {
+      setCurrentStep((prev) => (prev + 1) % STEPS_PER_BAR);
+    }, "16n");
 
-    // Apply gain/pan/mute/solo state to Tone
-    const anySolo = tracks.some((t) => t.isSolo);
+    return () => {
+      Tone.Transport.clear(id);
+    };
+  }, []);
 
-    tracks.forEach((track) => {
-      const node = trackNodesRef.current[track.id];
-      if (!node) return;
+  // NOTE: For now we’re only driving the visual grid.
+  // Actual note triggering per lane can be added later by
+  // reading `pattern` inside the scheduleRepeat callback.
 
-      // volume & pan
-      node.channel.volume.value = track.volumeDb;
-      npm run BiquadFilterNode
-      node.channel.pan.value = track.pan;
-
-      // solo logic at engine level
-      if (anySolo) {
-        node.channel.mute = !track.isSolo;
-      } else {
-        node.channel.mute = track.isMuted;
-      }
-    });
-
-    // Cleanup removed tracks
-    Object.keys(trackNodesRef.current).forEach((id) => {
-      if (!tracks.find((t) => t.id === id)) {
-        trackNodesRef.current[id].channel.dispose();
-        delete trackNodesRef.current[id];
-      }
-    });
-  }, [tracks]);
+  // --- UI ---------------------------------------------------------------------
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-50 flex flex-col">
@@ -167,7 +162,7 @@ function App() {
       </header>
 
       <main className="flex-1 px-6 py-4 space-y-4">
-        {/* STEP A: Transport */}
+        {/* A. Transport bar */}
         <TransportBar
           audioStarted={audioStarted}
           isPlaying={isPlaying}
@@ -179,7 +174,7 @@ function App() {
         />
 
         <section className="grid grid-cols-12 gap-4">
-          {/* STEP B: Track list + hierarchy */}
+          {/* B. Track list / hierarchy */}
           <div className="col-span-4 space-y-3">
             <h2 className="text-xs uppercase tracking-wide text-slate-400">
               Track List
@@ -191,17 +186,23 @@ function App() {
             />
           </div>
 
-          {/* STEP C: Mixer section */}
+          {/* C + E: Mixer + Sequencer */}
           <div className="col-span-8 space-y-3">
-            <h2 className="text-xs uppercase tracking-wide text-slate-400">
-              Mixer
-            </h2>
+            {/* C. Mixer section */}
             <MixerSection
               tracks={tracks}
               onChangeVolume={handleChangeVolume}
               onChangePan={handleChangePan}
               onToggleMute={handleToggleMute}
               onToggleSolo={handleToggleSolo}
+            />
+
+            {/* E. Sequencer grid */}
+            <SequencerGrid
+              tracks={tracks}
+              pattern={pattern}
+              currentStep={currentStep}
+              onToggleStep={handleToggleStep}
             />
           </div>
         </section>

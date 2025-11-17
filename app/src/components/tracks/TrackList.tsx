@@ -7,12 +7,6 @@ type Props = {
   onToggleSolo: (id: string) => void;
 };
 
-// Simple helper to compute indent from parent/group
-const getIndent = (track: Track): number => {
-  if (track.isGroup) return 0;
-  return track.parentId ? 1 : 0;
-};
-
 export function TrackList({ tracks, onToggleMute, onToggleSolo }: Props) {
   if (!tracks.length) {
     return (
@@ -24,65 +18,45 @@ export function TrackList({ tracks, onToggleMute, onToggleSolo }: Props) {
 
   return (
     <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 space-y-2">
-      {tracks.map((track) => {
-        const indent = getIndent(track);
-
-        return (
-          <div
-            key={track.id}
-            className="flex items-center justify-between px-2 py-1.5 rounded-lg bg-slate-900/80"
-          >
-            <div className="flex items-center gap-2">
-              {/* Color chip */}
-              <span
-                className="h-3 w-3 rounded-full"
-                style={{ backgroundColor: track.color }}
-              />
-
-              {/* Name with indent */}
-              <span
-                className={`text-sm text-slate-100 ${
-                  track.isGroup ? "font-semibold" : "font-normal"
-                }`}
-                style={{ paddingLeft: indent * 12 }}
-              >
-                {track.name}
-                {track.isGroup && (
-                  <span className="ml-1 text-[10px] uppercase text-slate-500">
-                    Group
-                  </span>
-                )}
-              </span>
-            </div>
-
-            {/* Solo / Mute */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => onToggleSolo(track.id)}
-                className={`px-2 py-0.5 rounded text-xs font-semibold border
-                  ${
-                    track.isSolo
-                      ? "bg-yellow-400 text-slate-900 border-yellow-300"
-                      : "bg-slate-800 text-slate-200 border-slate-700"
-                  }`}
-              >
-                S
-              </button>
-              <button
-                onClick={() => onToggleMute(track.id)}
-                className={`px-2 py-0.5 rounded text-xs font-semibold border
-                  ${
-                    track.isMuted
-                      ? "bg-rose-500 text-white border-rose-400"
-                      : "bg-slate-800 text-slate-200 border-slate-700"
-                  }`}
-              >
-                M
-              </button>
-            </div>
+      {tracks.map((track) => (
+        <div
+          key={track.id}
+          className="flex items-center justify-between px-2 py-1.5 rounded-lg bg-slate-900/80"
+        >
+          <div className="flex items-center gap-2">
+            <span
+              className="h-3 w-3 rounded-full"
+              style={{ backgroundColor: track.color }}
+            />
+            <span className="text-sm text-slate-100">{track.name}</span>
           </div>
-        );
-      })}
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => onToggleSolo(track.id)}
+              className={`px-2 py-0.5 rounded text-xs font-semibold border
+                ${
+                  track.isSolo
+                    ? "bg-yellow-400 text-slate-900 border-yellow-300"
+                    : "bg-slate-800 text-slate-200 border-slate-700"
+                }`}
+            >
+              S
+            </button>
+            <button
+              onClick={() => onToggleMute(track.id)}
+              className={`px-2 py-0.5 rounded text-xs font-semibold border
+                ${
+                  track.isMuted
+                    ? "bg-rose-500 text-white border-rose-400"
+                    : "bg-slate-800 text-slate-200 border-slate-700"
+                }`}
+            >
+              M
+            </button>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

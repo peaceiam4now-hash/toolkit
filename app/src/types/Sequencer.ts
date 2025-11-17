@@ -1,18 +1,14 @@
 // /workspaces/toolkit/app/src/types/Sequencer.ts
 
-export type SequencerLaneId = "kick" | "snare" | "hihat" | "perc";
+// Minimal JSON-style contract for the step sequencer
+export interface SequencerPattern {
+  stepsPerBar: number;
+  lanes: SequencerLane[];
+}
 
 export interface SequencerLane {
-  id: SequencerLaneId;
-  label: string;
-  color: string;
+  trackId: string;      // maps directly to Track.id
+  label: string;        // display label
+  steps: boolean[];     // length = stepsPerBar
 }
 
-export interface SequencerPattern {
-  id: string;
-  stepsPerBar: number; // e.g. 16 steps per bar
-  bars: number;        // for now 1 bar
-  lanes: SequencerLane[];
-  // grid[laneId][stepIndex] -> boolean (active or not)
-  grid: Record<SequencerLaneId, boolean[]>;
-}

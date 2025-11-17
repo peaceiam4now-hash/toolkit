@@ -19,23 +19,16 @@ export function MixerSection({
 }: Props) {
   if (!tracks.length) {
     return (
-      <div className="rounded-xl border border-slate-800 bg-slate-900/60 px-4 py-6 text-sm text-slate-400">
-        Mixer will appear here once you add tracks.
+      <div className="rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-4 text-sm text-slate-400">
+        No tracks yet. Mixer will appear here once tracks are created.
       </div>
     );
   }
 
-  // Optionally, keep groups first
-  const ordered = [...tracks].sort((a, b) => {
-    if (a.isGroup && !b.isGroup) return -1;
-    if (!a.isGroup && b.isGroup) return 1;
-    return a.id.localeCompare(b.id);
-  });
-
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/60 px-4 py-4 overflow-x-auto">
+    <div className="rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-4 overflow-x-auto">
       <div className="flex gap-4">
-        {ordered.map((track) => (
+        {tracks.map((track) => (
           <MixerChannel
             key={track.id}
             track={track}
