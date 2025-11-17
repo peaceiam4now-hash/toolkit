@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import * as Tone from "tone";
-
 import { TransportBar } from "./components/transport/TransportBar";
 import { TrackList } from "./components/tracks/TrackList";
 import type { Track } from "./types/Track";
