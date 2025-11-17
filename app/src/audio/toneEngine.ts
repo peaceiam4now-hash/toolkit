@@ -1,52 +1,49 @@
-// src/audio/toneEngine.ts
 import * as Tone from "tone";
 
-let started = false;
-let initialized = false;
+let engineInitialized = false;
+let synth: Tone.Synth | null = null;
+let testPattern: any = null;
 
-function ensureInitialized() {
-  if (initialized) return;
+// Ensure AudioContext is started (must be called from a user gesture)
+export async function initAudioEngine() {
+  if (engineInitialized) return;
+
+  await Tone.start(); // must be inside a click handler
   Tone.Transport.bpm.value = 120;
   Tone.Transport.loop = true;
-  Tone.Transport.loopStart = "0m";
+  Tone.Transport.loopStart = 0;
   Tone.Transport.loopEnd = "1m";
-  initialized = true;
+
+  engineInitialized = true;
 }
 
-/**
- * Must be called from a user gesture (button click).
- */
-export async function initAudioEngine(): Promise<void> {
-  if (started) return;
-  await Tone.start();
-  ensureInitialized();
+// Start a simple reference loop (for now our "test DAW" sound)
+export async function startTestLoop() {
+  await initAudioEngine();
 
-  // very simple metronome for now
-  const click = new Tone.MembraneSynth().toDestination();
-  const loop = new Tone.Loop((time) => {
-    click.triggerAttackRelease("C4", "16n", time);
-  }, "4n").start(0);
+  if (!synth) {
+    synth = new Tone.Synth().toDestination();
+  }
 
-  loop.humanize = true;
+  if (!testPattern) {
+    testPattern = new Tone.Sequence(
+      (time: number, note: string) => {
+        synth!.triggerAttackRelease(note, "8n", time);
+      },
+      ["C4", "E4", "G4", "B4"],
+      "4n"
+    );
+    testPattern.start(0);
+  }
 
-  started = true;
+  if (Tone.Transport.state !== "started") {
+    Tone.Transport.start();
+  }
 }
 
-export function isEngineStarted(): boolean {
-  return started;
-}
-
-export function playTransport() {
-  if (!started) return;
-  Tone.Transport.start();
-}
-
+// Stop transport (and keep engine ready)
 export function stopTransport() {
-  if (!started) return;
-  Tone.Transport.stop();
-}
-
-export function setBpm(bpm: number) {
-  ensureInitialized();
-  Tone.Transport.bpm.rampTo(bpm, 0.05);
+  if (Tone.Transport.state === "started") {
+    Tone.Transport.stop();
+  }
 }
