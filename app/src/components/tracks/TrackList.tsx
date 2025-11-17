@@ -1,9 +1,18 @@
-// src/components/tracks/TrackList.tsx
-export function TrackList() {
+// /workspaces/toolkit/app/src/components/tracks/TrackList.tsx
+
+import type { Track } from "../../types/Track";
+import { TrackRow } from "./TrackRow";
+
+type Props = {
+  tracks: Track[];
+};
+
+export function TrackList({ tracks }: Props) {
   return (
-    <section className="track-list">
-      <div>Track 1 – Placeholder</div>
-      <div>Track 2 – Placeholder</div>
-    </section>
+    <div style={{ marginTop: "1rem" }}>
+      {tracks.map((t) => (
+        <TrackRow key={t.id} track={t} />
+      ))}
+    </div>
   );
 }

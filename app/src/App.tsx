@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import * as Tone from "tone";
 import { TransportBar } from "./components/transport/TransportBar";
 import { Panel } from "./components/shared/Panel";
+import { TrackList } from "./components/tracks/TrackList";
+
 
 type Track = {
   id: number;
@@ -80,12 +82,9 @@ function App() {
       />
 
       <Panel title="Tracks">
-        <ul style={{ marginTop: "0.5rem" }}>
-          {INITIAL_TRACKS.map((track) => (
-            <li key={track.id}>{track.name}</li>
-          ))}
-        </ul>
-      </Panel>
+  <TrackList tracks={INITIAL_TRACKS} />
+</Panel>
+
     </div>
   );
 }
