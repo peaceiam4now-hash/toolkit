@@ -34,7 +34,7 @@ export function TransportBar({
       </button>
 
       <label style={{ marginLeft: "1rem" }}>
-        BPM{" "}
+        BPM&nbsp;
         <input
           type="number"
           min={40}
