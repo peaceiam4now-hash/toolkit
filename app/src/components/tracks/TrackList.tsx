@@ -18,7 +18,7 @@ export function TrackList({ tracks, onToggleMute, onToggleSolo }: Props) {
 
   return (
     <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 space-y-2">
-      {tracks.map(track => (
+      {tracks.map((track) => (
         <div
           key={track.id}
           className="flex items-center justify-between px-2 py-1.5 rounded-lg bg-slate-900/80"

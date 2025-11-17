@@ -1,20 +1,18 @@
 // /workspaces/toolkit/app/src/types/Sequencer.ts
 
-export type StepState = {
-  stepIndex: number; // 0..15
-  active: boolean;
-};
+export type SequencerLaneId = "kick" | "snare" | "hihat" | "perc";
 
-export type SequencerLane = {
-  id: string;
-  trackId: string;
+export interface SequencerLane {
+  id: SequencerLaneId;
   label: string;
-  steps: StepState[];
-};
+  color: string;
+}
 
-export type SequencerPattern = {
+export interface SequencerPattern {
   id: string;
-  name: string;
-  stepsPerBar: number; // e.g. 16
+  stepsPerBar: number; // e.g. 16 steps per bar
+  bars: number;        // for now 1 bar
   lanes: SequencerLane[];
-};
+  // grid[laneId][stepIndex] -> boolean (active or not)
+  grid: Record<SequencerLaneId, boolean[]>;
+}

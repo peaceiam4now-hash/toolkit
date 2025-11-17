@@ -5,7 +5,7 @@ export const initialTracks: Track[] = [
   {
     id: "track-1",
     name: "Drums",
-    kind: "group",          // valid for a bus/group
+    kind: "group",
     color: "#22c55e",
     isGroup: true,
     parentId: null,
@@ -22,7 +22,7 @@ export const initialTracks: Track[] = [
     kind: "audio",
     color: "#0ea5e9",
     isGroup: false,
-    parentId: "track-1",     // subordinate to group
+    parentId: "track-1",
     children: [],
     volumeDb: -8,
     pan: 0,
