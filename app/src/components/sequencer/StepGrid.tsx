@@ -1,46 +1,38 @@
-import type { SequencerPattern, SequencerLane } from "../../types/Sequencer";
+// /workspaces/toolkit/app/src/components/sequencer/StepGrid.tsx
+import type { SequencerLane } from "../../types/Sequencer";
 
 type Props = {
-  pattern: SequencerPattern;
+  lane: SequencerLane;
+  stepsPerBar: number;
   onToggleStep: (laneId: string, stepIndex: number) => void;
 };
 
-export function StepGrid({ pattern, onToggleStep }: Props) {
+/**
+ * StepGrid renders the clickable step buttons for a single lane.
+ * Each step is toggle-able (on/off) and reflects active state visually.
+ */
+export function StepGrid({ lane, stepsPerBar, onToggleStep }: Props) {
   return (
-    <div style={{ display: "grid", gap: "16px" }}>
-      {pattern.lanes.map((lane) => (
-        <LaneRow key={lane.id} lane={lane} onToggleStep={onToggleStep} />
-      ))}
-    </div>
-  );
-}
+    <div className="flex items-center space-x-2">
+      {/* Lane label */}
+      <span className="w-16 text-xs text-slate-400">{lane.label}</span>
 
-function LaneRow({
-  lane,
-  onToggleStep
-}: {
-  lane: SequencerLane;
-  onToggleStep: (laneId: string, stepIndex: number) => void;
-}) {
-  return (
-    <div>
-      <div style={{ fontWeight: 600 }}>{lane.label}</div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(16, 24px)", gap: "4px" }}>
-        {lane.steps.map((on, i) => (
-          <div
-            key={i}
-            onClick={() => onToggleStep(lane.id, i)}
-            style={{
-              width: 20,
-              height: 20,
-              borderRadius: 4,
-              cursor: "pointer",
-              background: on ? "rgb(99,102,241)" : "rgb(229,231,235)",
-              border: "1px solid rgb(156,163,175)"
-            }}
-          />
-        ))}
+      {/* Step buttons */}
+      <div className="flex space-x-1">
+        {Array.from({ length: stepsPerBar }).map((_, idx) => {
+          const isActive = lane.steps[idx];
+          return (
+            <button
+              key={idx}
+              onClick={() => onToggleStep(lane.id, idx)}
+              className={`w-6 h-6 rounded-sm border ${
+                isActive
+                  ? "bg-indigo-500 border-indigo-400"
+                  : "bg-slate-800 border-slate-700"
+              }`}
+            />
+          );
+        })}
       </div>
     </div>
   );

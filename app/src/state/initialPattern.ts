@@ -1,107 +1,38 @@
-// src/state/initialPattern.ts
-
+// /workspaces/toolkit/app/src/state/initialPattern.ts
 import type { SequencerPattern } from "../types/Sequencer";
 
-
-
 export const initialPattern: SequencerPattern = {
-
-  id: "pattern-1",
-
-  name: "Starter Groove",
-
+  id: "p1",
+  name: "Default Pattern",
   stepsPerBar: 16,
-
   lanes: [
-
     {
-
-      id: "kick",
-
+      id: "kick-lane",
       label: "Kick",
-
-      trackId: "track-1",
-
+      trackId: "kick",
       steps: [
-
         true, false, false, false,
-
         true, false, false, false,
-
         true, false, false, false,
-
         true, false, false, false,
-
       ],
-
     },
-
     {
-
-      id: "snare",
-
+      id: "snare-lane",
       label: "Snare",
-
-      trackId: "track-1",
-
+      trackId: "snare",
       steps: [
-
-        false, false, true,  false,
-
-        false, false, true,  false,
-
-        false, false, true,  false,
-
-        false, false, true,  false,
-
+        false, false, true, false,
+        false, false, true, false,
+        false, false, true, false,
+        false, false, true, false,
       ],
-
     },
-
     {
-
-      id: "hihat",
-
-      label: "Hat",
-
-      trackId: "track-1",
-
-      steps: [
-
-        true, true,  true,  true,
-
-        true, true,  true,  true,
-
-        true, true,  true,  true,
-
-        true, true,  true,  true,
-
-      ],
-
+      id: "hihat-lane",
+      label: "Hi-Hat",
+      trackId: "hat",
+      steps: new Array(16).fill(true),
     },
-
-    {
-
-      id: "bass",
-
-      label: "Bass",
-
-      trackId: "track-2",
-
-      steps: [
-
-        true,  false, false, false,
-
-        false, true,  false, false,
-
-        true,  false, false, false,
-
-        false, true,  false, false,
-
-      ],
-
-    },
-
   ],
-
 };
