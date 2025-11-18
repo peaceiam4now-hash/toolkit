@@ -1,0 +1,81 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://lunar.studio/schema/track.json",
+  "title": "LunarTrack",
+  "description": "Single track definition for Lunar Studios Web DAW.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "name",
+    "kind",
+    "color",
+    "isGroup",
+    "volumeDb",
+    "pan",
+    "isMuted",
+    "isSolo",
+    "armed"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Stable unique track ID (UUID or slug)."
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "description": "Display name of the track."
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["audio", "instrument", "group"],
+      "description": "High-level type of the track."
+    },
+    "color": {
+      "type": "string",
+      "pattern": "^#(?:[0-9a-fA-F]{6}|[0-9a-fA-F]{3})$",
+      "description": "Hex color used in the UI."
+    },
+    "isGroup": {
+      "type": "boolean",
+      "description": "True if this is a bus/group track."
+    },
+    "parentId": {
+      "type": ["string", "null"],
+      "description": "Optional parent track ID if part of a group."
+    },
+    "children": {
+      "type": "array",
+      "description": "Optional nested child tracks (hierarchical folders/busses).",
+      "items": {
+        "$ref": "https://lunar.studio/schema/track.json"
+      }
+    },
+    "volumeDb": {
+      "type": "number",
+      "minimum": -60,
+      "maximum": 6,
+      "description": "Fader gain in dB. 0 = unity."
+    },
+    "pan": {
+      "type": "number",
+      "minimum": -1,
+      "maximum": 1,
+      "description": "Pan position, -1 = full left, 0 = center, 1 = full right."
+    },
+    "isMuted": {
+      "type": "boolean",
+      "description": "Mute state for this track."
+    },
+    "isSolo": {
+      "type": "boolean",
+      "description": "Solo state for this track."
+    },
+    "armed": {
+      "type": "boolean",
+      "description": "Record-arm flag (future use)."
+    }
+  }
+}

@@ -3,20 +3,20 @@
 export type TrackKind = "audio" | "instrument" | "group";
 
 export interface Track {
-  id: string;              // stable unique id
-  name: string;            // UI label
-  kind: TrackKind;         // audio / instrument / group
-  color: string;           // hex color for UI
-  isGroup: boolean;        // true for bus/group tracks
+  id: string;
+  name: string;
+  kind: TrackKind;
+
+  color: string;     // Hex color (#rrggbb)
+  isGroup: boolean;
+
   parentId?: string | null;
-  children?: Track[];      // optional nested tracks
+  children?: Track[];     // recursive
 
-  // Mixer parameters
-  volumeDb: number;        // fader value in dB
-  pan: number;             // -1..1 (L..R)
+  volumeDb: number;   // -60 .. +6 dB
+  pan: number;        // -1 .. 1
 
-  // States
-  isMuted: boolean;        // mute state
-  isSolo: boolean;         // solo state
-  armed: boolean;          // record-arm (future use)
+  isMuted: boolean;
+  isSolo: boolean;
+  armed: boolean;
 }

@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://lunar.studio/schema/project.json",
+  "title": "LunarProject",
+  "description": "Top-level project snapshot for Lunar Studios Web DAW.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "name", "bpm", "tracks", "pattern"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique project ID (UUID, slug, etc.)."
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100,
+      "description": "Project title shown in the header."
+    },
+    "bpm": {
+      "type": "number",
+      "minimum": 40,
+      "maximum": 240,
+      "default": 120,
+      "description": "Tempo in beats per minute."
+    },
+    "swing": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "default": 0,
+      "description": "Optional swing/shuffle amount (0–1)."
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO timestamp when the project was created."
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO timestamp when the project was last updated."
+    },
+    "tracks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "https://lunar.studio/schema/track.json"
+      },
+      "description": "All tracks in the current project."
+    },
+    "pattern": {
+      "$ref": "https://lunar.studio/schema/sequencerPattern.json",
+      "description": "Primary pattern currently bound to the transport/sequencer grid."
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Loose key/value bag for AI agents and integrations.",
+      "additionalProperties": {
+        "type": ["string", "number", "boolean", "null"]
+      }
+    }
+  }
+}

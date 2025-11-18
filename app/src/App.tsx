@@ -1,21 +1,17 @@
-// /workspaces/toolkit/app/src/App.tsx
-
 import { useState } from "react";
 import * as Tone from "tone";
 
 import { TransportBar } from "./components/transport/TransportBar";
 import { TrackList } from "./components/tracks/TrackList";
 import { MixerSection } from "./components/mixer/MixerSection";
-import { SequencerGrid } from "./components/sequencer/SequencerGrid";
+import { StepSequencer } from "./components/sequencer/StepSequencer";
+
+import type { Track } from "./types/Track";
+import type { SequencerPattern } from "./types/Sequencer";
 
 import { initialTracks } from "./state/initialTracks";
 import { initialPattern } from "./state/initialPattern";
-
-import type { Track } from "./types/Track";
-import type {
-  SequencerPattern,
-  SequencerLaneId,
-} from "./types/Sequencer";
+import { sequencerEngine } from "./audio/sequencerEngine";
 
 function App() {
   const [audioStarted, setAudioStarted] = useState(false);
@@ -25,9 +21,7 @@ function App() {
   const [tracks, setTracks] = useState<Track[]>(initialTracks);
   const [pattern, setPattern] = useState<SequencerPattern>(initialPattern);
 
-  // --------------------------
-  // Transport / engine control
-  // --------------------------
+  // --- TRANSPORT / AUDIO ENGINE -----------------------------------------
 
   const handleStartEngine = async () => {
     await Tone.start();
@@ -40,12 +34,14 @@ function App() {
       setAudioStarted(true);
     }
 
-    Tone.Transport.bpm.value = bpm;
-    Tone.Transport.start();
+    sequencerEngine.setPattern(pattern);
+    sequencerEngine.start(bpm);
+
     setIsPlaying(true);
   };
 
   const handleStop = () => {
+    sequencerEngine.stop();
     Tone.Transport.stop();
     setIsPlaying(false);
   };
@@ -56,79 +52,66 @@ function App() {
     Tone.Transport.bpm.value = clamped;
   };
 
-  // --------------------------
-  // Mixer / track state
-  // --------------------------
+  // --- MIXER / TRACK STATE ----------------------------------------------
 
   const handleChangeVolume = (id: string, volumeDb: number) => {
     setTracks((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, volumeDb } : t)),
+      prev.map((t) => (t.id === id ? { ...t, volumeDb } : t))
     );
+    // Future hook: push volumeDb into Tone.js channel here
   };
 
   const handleChangePan = (id: string, pan: number) => {
     const clamped = Math.max(-1, Math.min(1, pan));
     setTracks((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, pan: clamped } : t)),
+      prev.map((t) => (t.id === id ? { ...t, pan: clamped } : t))
     );
+    // Future hook: push pan into Tone.js panner here
   };
 
   const handleToggleMute = (id: string) => {
     setTracks((prev) =>
       prev.map((t) =>
-        t.id === id ? { ...t, isMuted: !t.isMuted } : t,
-      ),
+        t.id === id ? { ...t, isMuted: !t.isMuted } : t
+      )
     );
+    // Future: mirror mute state to Tone.js channels
   };
 
   const handleToggleSolo = (id: string) => {
-    setTracks((prev) => {
-      const target = prev.find((t) => t.id === id);
-      if (!target) return prev;
+    setTracks((prev) =>
+      prev.map((t) =>
+        t.id === id ? { ...t, isSolo: !t.isSolo } : t
+      )
+    );
+    // Keeping solo logic simple for now (UI only)
+  };
 
-      const nextSolo = !target.isSolo;
+  // --- SEQUENCER STATE --------------------------------------------------
 
-      let next = prev.map((t) =>
-        t.id === id ? { ...t, isSolo: nextSolo } : t,
-      );
+  const handleToggleStep = (laneId: string, stepIndex: number) => {
+    setPattern((prev) => {
+      const next: SequencerPattern = {
+        ...prev,
+        lanes: prev.lanes.map((lane) =>
+          lane.id === laneId
+            ? {
+                ...lane,
+                steps: lane.steps.map((on, idx) =>
+                  idx === stepIndex ? !on : on
+                ),
+              }
+            : lane
+        ),
+      };
 
-      // Simple solo logic: if any track is soloed, mute all others
-      if (next.some((t) => t.isSolo)) {
-        next = next.map((t) =>
-          t.isSolo ? { ...t, isMuted: false } : { ...t, isMuted: true },
-        );
-      } else {
-        // No solo: clear mutes
-        next = next.map((t) => ({ ...t, isMuted: false }));
-      }
-
+      // keep engine live-updated while running
+      sequencerEngine.setPattern(next);
       return next;
     });
   };
 
-  // --------------------------
-  // Sequencer grid state
-  // --------------------------
-
-  const handleToggleStep = (laneId: SequencerLaneId, stepIndex: number) => {
-    setPattern((prev) => ({
-      ...prev,
-      lanes: prev.lanes.map((lane) =>
-        lane.id === laneId
-          ? {
-              ...lane,
-              steps: lane.steps.map((on, idx) =>
-                idx === stepIndex ? !on : on,
-              ),
-            }
-          : lane,
-      ),
-    }));
-  };
-
-  // --------------------------
-  // Layout / UI
-  // --------------------------
+  // --- RENDER -----------------------------------------------------------
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-50 flex flex-col">
@@ -140,6 +123,7 @@ function App() {
       </header>
 
       <main className="flex-1 px-6 py-4 space-y-4">
+        {/* Transport (A) */}
         <TransportBar
           audioStarted={audioStarted}
           isPlaying={isPlaying}
@@ -151,8 +135,8 @@ function App() {
         />
 
         <section className="grid grid-cols-12 gap-4">
-          {/* Left pane: track list / hierarchy */}
-          <div className="col-span-4 space-y-3">
+          {/* Track list + hierarchy (B) */}
+          <div className="col-span-3 space-y-3">
             <h2 className="text-xs uppercase tracking-wide text-slate-400">
               Track List
             </h2>
@@ -163,8 +147,9 @@ function App() {
             />
           </div>
 
-          {/* Right pane: mixer + sequencer */}
-          <div className="col-span-8 space-y-4">
+          {/* Mixer (C) + Effects rack / Sequencer (D/E) */}
+          <div className="col-span-9 space-y-4">
+            {/* Mixer section */}
             <MixerSection
               tracks={tracks}
               onChangeVolume={handleChangeVolume}
@@ -173,10 +158,13 @@ function App() {
               onToggleSolo={handleToggleSolo}
             />
 
-            <SequencerGrid
-              pattern={pattern}
-              onToggleStep={handleToggleStep}
-            />
+            {/* Step sequencer grid */}
+            <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4">
+              <h2 className="text-xs uppercase tracking-wide text-slate-400 mb-2">
+                Step Sequencer
+              </h2>
+              <StepSequencer pattern={pattern} onToggleStep={handleToggleStep} />
+            </div>
           </div>
         </section>
       </main>
