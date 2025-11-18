@@ -1,19 +1,14 @@
-// /workspaces/toolkit/app/src/types/Sequencer.ts
-
-// String alias for lane ids
-export type SequencerLaneId = string;
-
 export interface SequencerLane {
-  id: SequencerLaneId; // e.g. "kick", "snare"
-  trackId: string;     // tie this lane back to a Track.id (e.g. "track-1")
+  id: string;          // "kick", "snare", etc.
+  trackId: string;     // ties to a Track.id if you want
   label: string;       // UI label
-  steps: boolean[];    // 1D step array, length = stepsPerBar * bars
+  steps: boolean[];    // e.g. length 16
 }
 
 export interface SequencerPattern {
   id: string;
   name: string;
+  bars: number;
   stepsPerBar: number; // e.g. 16
-  bars: number;        // e.g. 1 or 4
   lanes: SequencerLane[];
 }

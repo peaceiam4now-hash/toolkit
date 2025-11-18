@@ -1,45 +1,33 @@
-// /workspaces/toolkit/app/src/state/initialPattern.ts
+// /src/state/initialPattern.ts
+
 import type { SequencerPattern } from "../types/Sequencer";
 
-// Simple 1-bar, 16-step pattern
 export const initialPattern: SequencerPattern = {
-  id: "pattern-1",
-  name: "Four on the Floor",
   stepsPerBar: 16,
-  bars: 1,
   lanes: [
     {
       id: "kick",
-      trackId: "track-1", // Drums group
+      trackId: "track-1",
       label: "Kick",
-      steps: [
-        true, false, false, false,
-        true, false, false, false,
-        true, false, false, false,
-        true, false, false, false,
-      ],
+      steps: Array(16).fill(false)
     },
     {
       id: "snare",
       trackId: "track-1",
       label: "Snare",
-      steps: [
-        false, false, false, false,
-        true,  false, false, false,
-        false, false, false, false,
-        true,  false, false, false,
-      ],
+      steps: Array(16).fill(false)
     },
     {
       id: "hihat",
       trackId: "track-1",
       label: "Hi-Hat",
-      steps: [
-        true,  false, true,  false,
-        true,  false, true,  false,
-        true,  false, true,  false,
-        true,  false, true,  false,
-      ],
+      steps: Array(16).fill(false)
     },
-  ],
+    {
+      id: "bass",
+      trackId: "track-2",
+      label: "Bass",
+      steps: Array(16).fill(false)
+    }
+  ]
 };
