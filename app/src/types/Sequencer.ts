@@ -1,14 +1,31 @@
+// src/types/Sequencer.ts
+// Just treat lane IDs as strings, but export an alias so we can type them.
+
+export type SequencerLaneId = string;
 export interface SequencerLane {
-  id: string;          // "kick", "snare", etc.
-  trackId: string;     // ties to a Track.id if you want
-  label: string;       // UI label
-  steps: boolean[];    // e.g. length 16
+
+  id: SequencerLaneId;   // e.g. "kick", "snare", "hihat", "bass"
+
+  label: string;         // UI label
+
+  trackId: string;       // tie lane to a Track.id if needed
+
+  steps: boolean[];      // on/off steps, length = stepsPerBar
+
 }
 
+
+
 export interface SequencerPattern {
+
   id: string;
+
   name: string;
-  bars: number;
-  stepsPerBar: number; // e.g. 16
+
+  stepsPerBar: number;   // e.g. 16
+
   lanes: SequencerLane[];
+
 }
+
+
